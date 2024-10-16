@@ -2,7 +2,7 @@ const fs = require('fs');
 
 const pokemonData = JSON.parse(fs.readFileSync(`${__dirname}/../data/pokedex.json`));
 
-const pokemonTypes = ['normal', 'fire', 'water', 'electric', 'grass', 'ice', 'fighting', 'poison', 'ground', 'flying', 'psychic', 'bug', 'rock', 'ghost', 'dragon', 'dark', 'steel', 'fairy'];
+const pokemonTypes = ['normal', 'fire', 'water', 'electric', 'grass', 'ice', 'fighting', 'poison', 'ground', 'flying', 'psychic', 'bug', 'rock', 'ghost', 'dragon'];
 
 const respond = (request, response, status, data) => {
   const dataString = JSON.stringify(data);
@@ -10,7 +10,9 @@ const respond = (request, response, status, data) => {
     'Content-Type': 'application/json',
     'Content-Length': Buffer.byteLength(dataString, 'utf8'),
   });
-  if (request !== 'HEAD') {
+  // if not a head request, write data
+  if (request.method !== 'HEAD' && status !== 204) {
+    console.log('not head');
     response.write(dataString);
   }
   response.end();
@@ -32,7 +34,7 @@ const getAll = (request, response) => {
 const getPokemon = (request, response) => {
   // go through all pokemon to see if their id or name matches with that of the request query
   for (let i = 0; i < pokemonData.length; i++) {
-    if (pokemonData[i].id === request.query.id) {
+    if (pokemonData[i].id === parseInt(request.query.id, 10)) {
       console.log('id match');
       return respond(request, response, 200, pokemonData[i]);
     }
@@ -95,7 +97,7 @@ const addDescription = (request, response) => {
   // if pokemon with this id
   if (id > 1 || id < 151) {
     pokemonData[id - 1].description = description;
-  } else if (!Number.isInteger(id) || id < 1 || id > 150) {
+  } else {
     return respond(request, response, 400, { message: 'The page you are looking for was not found.', id: 'notFound' });
   }
   if (responseCode === 201) {
@@ -120,7 +122,7 @@ const addRating = (request, response) => {
   // if pokemon with this id
   if (id > 1 || id < 151) {
     pokemonData[id - 1].rating = rating;
-  } else if (!Number.isInteger(id) || id < 1 || id > 150 || !Number.isInteger(rating)) {
+  } else {
     return respond(request, response, 400, { message: 'The page you are looking for was not found.', id: 'notFound' });
   }
   if (responseCode === 201) {

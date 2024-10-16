@@ -2,241 +2,326 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project 1 (Pokémon API)</title>
-    <link rel="stylesheet" type="text/css" href="/style.css">
-    <script>
-        const init = () => {
-            const descriptionForm = document.querySelector('#descriptionForm');
-            const ratingForm = document.querySelector('#ratingForm');
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project 1 (Pokémon API)</title>
+  <link rel="stylesheet" type="text/css" href="/style.css">
+  <script>
+    const init = () => {
+      // get/head
+      const randomForm = document.querySelector('#randomForm');
+      const allForm = document.querySelector('#allForm');
+      const pokemonForm = document.querySelector('#pokemonForm');
+      const typeForm = document.querySelector('#typeForm');
+      // post
+      const descriptionForm = document.querySelector('#descriptionForm');
+      const ratingForm = document.querySelector('#ratingForm');
 
-            const addDescription = (e) => {
-                e.preventDefault();
-                sendPost(descriptionForm);
-                return false;
+      const random = (e) => {
+        e.preventDefault();
+        sendGet(randomForm, 0);
+        return false;
+      }
+
+      const all = (e) => {
+        e.preventDefault();
+        sendGet(allForm, 1);
+        return false;
+      }
+
+      const searchRadios = pokemonForm.elements['search'];
+      document.getElementById('idField').style.display = "block";
+      document.getElementById('nameField').style.display = "none";
+      for (const radio of searchRadios) {
+        radio.onclick = () => {
+          if (searchRadios[0].checked) {
+            document.getElementById('idField').style.display = "block";
+            document.getElementById('nameField').style.display = "none";
+          } else {
+            document.getElementById('idField').style.display = "none";
+            document.getElementById('nameField').style.display = "block";
+          }
+        }
+      }
+
+      const getPokemon = (e) => {
+        e.preventDefault();
+        sendGet(pokemonForm, 2);
+        return false;
+      }
+
+      const types = (e) => {
+        e.preventDefault();
+        sendGet(typeForm, 3);
+        return false;
+      }
+
+      const addDescription = (e) => {
+        e.preventDefault();
+        sendPost(descriptionForm);
+        return false;
+      }
+
+      const addRating = (e) => {
+        e.preventDefault();
+        sendPost(ratingForm);
+        return false;
+      }
+
+      //add event listeners
+      randomForm.addEventListener('submit', random);
+      allForm.addEventListener('submit', all);
+      pokemonForm.addEventListener('submit', getPokemon)
+
+      typeForm.addEventListener('submit', types);
+      descriptionForm.addEventListener('submit', addDescription);
+      ratingForm.addEventListener('submit', addRating);
+    }
+
+    const handleResponse = async (response, parseResponse, endpointNum) => {
+      const content = document.getElementsByClassName('result')[endpointNum];
+      switch (response.status) {
+        case 200:
+          content.innerHTML = `<b>Success</b>`;
+          if (parseResponse) {
+            let obj = await response.json();
+            if (response.status === 200) {
+              content.innerHTML += `<p>${JSON.stringify(obj)}</p>`;
             }
+          }
+          break;
+        case 201:
+          content.innerHTML = `<b>Created</b>`;
+          break;
+        case 204:
+          content.innerHTML = `<b>Updated (No Content)</b>`;
+          break;
+        case 400:
+          content.innerHTML = `<b>Bad Request</b>`;
+          break;
+        case 404:
+          content.innerHTML = `<b>Resource Not Found</b>`;
+          break;
+        default:
+          content.innerHTML = `Error code not implemented by client.`;
+          break;
+      }
+    };
 
-            const addRating = (e) => {
-                e.preventDefault();
-                sendPost(ratingForm);
-                return false;
-            }
+    const sendGet = async (form, endpointNum) => {
+      let url = form.getAttribute('action');
+      const radios = form.elements['method'];
+      let method = '';
+      console.log(method)
+      for (let i = 0; i < radios.length; i++) {
+        if (radios[i].checked) {
+          method = radios[i].value;
+        }
+      }
+      console.log(document.getElementById('idField').style.display);
+      // if getPokemon form
+      if (form.getAttribute('id') == 'pokemonForm') {
+        // if id field is visible
+        // check to see if id input matches existing id
+        if (document.getElementById('idField').style.display == 'block') {
+          url += `?id=${document.getElementById('idField').value}`;
+        } else {
+          // if name field is visible and does not have integer
+          if (!parseInt(document.getElementById('nameField').value, 10)) {
+            url += `?name=${document.getElementById('nameField').value.toLowerCase()}`;
+          }
+        }
+      }
+      // if getPokemonFromType form
+      if (form.getAttribute('id') == 'typeForm') {
+        url += `?type=${document.getElementById('typeSelect').value}`;
+      }
+      let response = await fetch(url, {
+        method: method,
+        headers: {
+          'Accept': 'application/json',
+        }
+      });
+      handleResponse(response, method === 'GET', endpointNum);
+    };
 
-            //add event listeners
-            descriptionForm.addEventListener('submit', addDescription);
-            ratingForm.addEventListener('submit', addRating);
+    const sendPost = async (form) => {
+      //Grab all the info from the form
+      const url = form.getAttribute('action');
+      const method = form.getAttribute('method');
+      if (form.getAttribute('id') == 'descriptionForm') {
+        const idField = form.querySelector('#idDescriptionField');
+        const descriptionField = form.querySelector('#descriptionField');
+
+        //Build a data string in the FORM-URLENCODED format.
+        let formData = '';
+        if (parseInt(idField.value, 10) <= 151) {
+          formData = `id=${idField.value}&description=${descriptionField.value}`;
         }
 
-        const handleResponse = async (response, parseResponse, endpointNum) => {
-            const content = document.getElementsByClassName('result')[endpointNum];
-            console.log(response.status);
-            switch (response.status) {
-                case 200:
-                    content.innerHTML = `<b>Success</b>`;
-                    break;
-                case 201:
-                    content.innerHTML = `<b>Created</b>`;
-                    break;
-                case 204:
-                    content.innerHTML = `<b>Updated (No Content)</b>`;
-                    break;
-                case 400:
-                    content.innerHTML = `<b>Bad Request</b>`;
-                    break;
-                case 404:
-                    content.innerHTML = `<b>Resource Not Found</b>`;
-                    break;
-                default:
-                    content.innerHTML = `Error code not implemented by client.`;
-                    break;
-            }
+        //const formData = `id=${idField.value}&description=${descriptionField.value}`;
+        console.log(formData)
 
-            //If we should parse a response (meaning we made a get request)
-            // if (parseResponse) {
-            //     //Parse the response to json. This is an async function, so we will await it.
-            //     let obj = await response.json();
-            //     console.log(obj);
-            //     //   if (response.status === 200) {
-            //     //     content.innerHTML += `<p>${JSON.stringify(obj.users)}</p>`;
-            //     //   } else { // show message for all other status codes
-            //     //     content.innerHTML += `<p>${obj.message}</p>`;
-            //     //   }
-            // }
-        };
+        //Make a fetch request and await a response. Set the method to
+        //the one provided by the form (POST). Set the headers. Content-Type
+        //is the type of data we are sending. Accept is the data we would like
+        //in response. Then add our FORM-URLENCODED string as the body of the request.
+        let response = await fetch(url, {
+          method: method,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json',
+          },
+          body: formData,
+        });
+        //Once we have a response, handle it.
+        handleResponse(response, response.status !== 204, 4);
+      }
+      if (form.getAttribute('id') == 'ratingForm') {
+        const idField = form.querySelector('#idRatingField');
+        const ratingField = form.querySelector('#ratingField');
 
-        const sendPost = async (form) => {
-            //Grab all the info from the form
-            const url = form.getAttribute('action');
-            const method = form.getAttribute('method');
-            if (form.getAttribute('id') == 'descriptionForm') {
-                const idField = form.querySelector('#idField');
-                const descriptionField = form.querySelector('#descriptionField');
+        //Build a data string in the FORM-URLENCODED format.
+        const formData = `id=${idField.value}&rating=${ratingField.value}`;
+        console.log(formData)
 
-                //Build a data string in the FORM-URLENCODED format.
-                const formData = `id=${idField.value}&description=${descriptionField.value}`;
-                console.log(formData)
+        //Make a fetch request and await a response. Set the method to
+        //the one provided by the form (POST). Set the headers. Content-Type
+        //is the type of data we are sending. Accept is the data we would like
+        //in response. Then add our FORM-URLENCODED string as the body of the request.
+        let response = await fetch(url, {
+          method: method,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json',
+          },
+          body: formData,
+        });
+        //Once we have a response, handle it.
+        handleResponse(response, response.status !== 204, 5);
+      }
 
-                //Make a fetch request and await a response. Set the method to
-                //the one provided by the form (POST). Set the headers. Content-Type
-                //is the type of data we are sending. Accept is the data we would like
-                //in response. Then add our FORM-URLENCODED string as the body of the request.
-                let response = await fetch(url, {
-                    method: method,
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'Accept': 'application/json',
-                    },
-                    body: formData,
-                });
-                //Once we have a response, handle it.
-                handleResponse(response, response.status !== 204, 0);
-            }
+    };
 
-            if (form.getAttribute('id') == 'ratingForm') {
-                const idField = form.querySelector('#idField');
-                const ratingField = form.querySelector('#ratingField');
-
-                //Build a data string in the FORM-URLENCODED format.
-                const formData = `id=${idField.value}&rating=${ratingField.value}`;
-                console.log(formData)
-
-                //Make a fetch request and await a response. Set the method to
-                //the one provided by the form (POST). Set the headers. Content-Type
-                //is the type of data we are sending. Accept is the data we would like
-                //in response. Then add our FORM-URLENCODED string as the body of the request.
-                let response = await fetch(url, {
-                    method: method,
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'Accept': 'application/json',
-                    },
-                    body: formData,
-                });
-                //Once we have a response, handle it.
-                handleResponse(response, response.status !== 204, 1);
-            }
-
-        };
-
-        window.onload = init;
-    </script>
+    window.onload = init;
+  </script>
 </head>
 
 <body>
-    <div class="mainContent">
-        <!-- <a href="/docs">API Documentation</a> -->
-        <h1>Test Pokemon API</h1>
-
-        <!-- 
-    <div class="endpoint">
-        <h2 class="collapsible">
-          /api/getRandom <span class="methods"><code>GET</code> <code>HEAD</code></span>
-        </h2>
-        <div class="content">
-          <div class="content-box">
-            <h3>Test This Endpoint</h3>
-            <form data-method="GET" data-endpoint="/api/getRandom">
-              <label><input type="radio" name="method" value="GET" checked> GET</label>
-              <label><input type="radio" name="method" value="HEAD"> HEAD</label><br>
-              <button type="submit">Send Request</button>
-            </form>
-            <pre class="result"></pre>
-          </div>
-        </div>
-      </div>
-
-    <div class="endpoint">
-      <h2 class="collapsible">
-        /api/getFilmTitles <span class="methods"><code>GET</code> <code>HEAD</code></span>
-      </h2>
-      <div class="content">
-        <div class="content-box">
-          <h3>Test This Endpoint</h3>
-          <form data-method="GET" data-endpoint="/api/getFilmTitles">
-            <label>Actor: <input type="text" name="actor"></label><br>
-            <label>Year: <input type="text" name="year"></label><br>
-            <label><input type="radio" name="method" value="GET" checked> GET</label>
-            <label><input type="radio" name="method" value="HEAD"> HEAD</label><br>
-            <button type="submit">Send Request</button>
-          </form>
-          <pre class="result"></pre>
-        </div>
-      </div>
+  <!-- <a href="/docs">API Documentation</a> -->
+  <h1>Test Pokemon API</h1>
+  <div class="endpoint">
+    <h2>
+      /getRandom <span class="methods">GET / HEAD</span>
+    </h2>
+    <div class="content">
+      <h3>Test This Endpoint</h3>
+      <form id="randomForm" action="/getRandom" method="get">
+        <label><input type="radio" name="method" value="GET" checked> GET</label>
+        <label><input type="radio" name="method" value="HEAD"> HEAD</label><br>
+        <button type="submit">Send Request</button>
+      </form>
+      <pre class="result"></pre>
     </div>
+  </div>
 
-    <div class="endpoint">
-      <h2 class="collapsible">
-        /api/getFilms <span class="methods"><code>GET</code> <code>HEAD</code></span>
-      </h2>
-      <div class="content">
-        <div class="content-box">
-          <h3>Test This Endpoint</h3>
-          <form data-method="GET" data-endpoint="/api/getFilms">
-            <label>Title: <input type="text" name="title"></label><br>
-            <label>Actor: <input type="text" name="actor"></label><br>
-            <label>Year: <input type="text" name="year"></label><br>
-            <label><input type="radio" name="method" value="GET" checked> GET</label>
-            <label><input type="radio" name="method" value="HEAD"> HEAD</label><br>
-            <button type="submit">Send Request</button>
-          </form>
-          <pre class="result"></pre>
-        </div>
-      </div>
+  <div class="endpoint">
+    <h2>
+      /getAll <span class="methods">GET / HEAD</span>
+    </h2>
+    <div class="content">
+      <h3>Test This Endpoint</h3>
+      <form id="allForm" action="/getAll" method="get">
+        <label><input type="radio" name="method" value="GET" checked> GET</label>
+        <label><input type="radio" name="method" value="HEAD"> HEAD</label><br>
+        <button type="submit">Send Request</button>
+      </form>
+      <pre class="result"></pre>
     </div>
+  </div>
 
-    <div class="endpoint">
-      <h2 class="collapsible">
-        /api/getFilm <span class="methods"><code>GET</code> <code>HEAD</code></span>
-      </h2>
-      <div class="content">
-        <div class="content-box">
-          <h3>Test This Endpoint</h3>
-          <form data-method="GET" data-endpoint="/api/getFilm">
-            <label>Title: <input type="text" name="title"></label><br>
-            <label><input type="radio" name="method" value="GET" checked> GET</label>
-            <label><input type="radio" name="method" value="HEAD"> HEAD</label><br>
-            <button type="submit">Send Request</button>
-          </form>
-          <pre class="result"></pre>
-        </div>
-      </div>
-    </div> -->
-
-        <div class="endpoint">
-            <h2 class="collapsible">
-                /addDescription <span class="methods"><code>POST</code></span>
-            </h2>
-            <div class="content">
-                <div class="content-box">
-                    <h3>Test This Endpoint</h3>
-                    <form id="descriptionForm" action="/addDescription" method="post">
-                        <label>ID: <input type="text" name="id" id="idField"></label><br>
-                        <label>Description: <input type="text" name="description" id="descriptionField"></label><br>
-                        <button type="submit">Send Request</button>
-                    </form>
-                    <pre class="result"></pre>
-                </div>
-            </div>
-        </div>
-
-        <div class="endpoint">
-            <h2 class="collapsible">
-                /addRating <span class="methods"><code>POST</code></span>
-            </h2>
-            <div class="content">
-                <div class="content-box">
-                    <h3>Test This Endpoint</h3>
-                    <form id="ratingForm" action="/addRating" method="post">
-                        <label>ID: <input type="text" id="idField"></label><br>
-                        <label>Rating: <input type="text" id="ratingField"></label><br>
-                        <button type="submit">Send Request</button>
-                    </form>
-                    <pre class="result"></pre>
-                </div>
-            </div>
-        </div>
+  <div class="endpoint">
+    <h2>
+      /getPokemon <span class="methods">GET / HEAD</span>
+    </h2>
+    <div class="content">
+      <h3>Test This Endpoint</h3>
+      <form id="pokemonForm" action="/getPokemon" method="get">
+        <label><input type="radio" name="search" value="id" checked>ID</label>
+        <label><input type="radio" name="search" value="name">Name</label><br>
+        <input type="number" name="id" id="idField">
+        <input type="text" name="name" id="nameField">
+        <br>
+        <label><input type="radio" name="method" value="GET" checked> GET</label>
+        <label><input type="radio" name="method" value="HEAD"> HEAD</label><br>
+        <button type="submit">Send Request</button>
+      </form>
+      <pre class="result"></pre>
     </div>
+  </div>
+
+  <div class="endpoint">
+    <h2>
+      /getPokemonFromType <span class="methods">GET / HEAD</span>
+    </h2>
+    <div class="content">
+      <h3>Test This Endpoint</h3>
+      <form id="typeForm" action="/getPokemonFromType" method="get">
+        <select name="types" id="typeSelect">
+          <option value="normal">Normal</option>
+          <option value="fire">Fire</option>
+          <option value="water">Water</option>
+          <option value="grass">Grass</option>
+          <option value="electric">Electric</option>
+          <option value="ice">Ice</option>
+          <option value="fighting">Fighting</option>
+          <option value="poison">Poison</option>
+          <option value="ground">Ground</option>
+          <option value="flying">Flying</option>
+          <option value="psychic">Psychic</option>
+          <option value="bug">Bug</option>
+          <option value="rock">Rock</option>
+          <option value="ghost">Ghost</option>
+          <option value="dragon">Dragon</option>
+        </select>
+        <br>
+        <label><input type="radio" name="method" value="GET" checked> GET</label>
+        <label><input type="radio" name="method" value="HEAD"> HEAD</label><br>
+        <button type="submit">Send Request</button>
+      </form>
+      <pre class="result"></pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <h2>
+      /addDescription <span class="methods">POST</span>
+    </h2>
+    <div class="content">
+      <h3>Test This Endpoint</h3>
+      <form id="descriptionForm" action="/addDescription" method="post">
+        <label>ID: <input type="number" name="id" id="idDescriptionField"></label><br>
+        <label>Description: <input type="text" name="description" id="descriptionField"></label><br>
+        <button type="submit">Send Request</button>
+      </form>
+      <pre class="result"></pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <h2>
+      /addRating <span class="methods">POST</span>
+    </h2>
+    <div class="content">
+      <h3>Test This Endpoint</h3>
+      <form id="ratingForm" action="/addRating" method="post">
+        <label>ID: <input type="number" id="idRatingField"></label><br>
+        <label>Rating: <input type="number" id="ratingField"></label><br>
+        <button type="submit">Send Request</button>
+      </form>
+      <pre class="result"></pre>
+    </div>
+  </div>
 
 </body>
 

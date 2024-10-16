@@ -1,0 +1,6 @@
+pre {
+    width: 500px;
+    max-height: 300px;
+    overflow: scroll;
+    white-space: pre-wrap;
+}
