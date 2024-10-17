@@ -1,6 +1,78 @@
+@import url('https://fonts.googleapis.com/css2?family=Bungee+Tint&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bungee+Tint&family=Pixelify+Sans:wght@400..700&display=swap');
+
 pre {
-    width: 500px;
+    background: #E9967A;
+    padding: 10px;
+    flex-grow: 1;
+    max-width: 350px;
     max-height: 300px;
     overflow: scroll;
     white-space: pre-wrap;
+}
+
+.header {
+    text-align: center;
+    background: #E9967A;
+    padding: 50px;
+}
+
+.header h1 {
+    font-family: 'Bungee Tint', 'Lucida Console', monospace, sans-serif;
+    font-size: 4rem;
+}
+
+.endpoint {
+    border: solid red;
+    padding: 30px;
+    margin: 10px 20px;
+    flex-grow: 1;
+}
+
+h2 {
+    font-family: 'Pixelify Sans', 'Lucida Console', monospace;
+    font-size: 2rem;
+}
+
+h3 {
+    font-family: 'Lucida Console', monospace;
+    font-size: 1.2rem;
+}
+
+span {
+    background: red;
+    font-family: 'Pixelify Sans', 'Lucida Console', monospace;
+    font-size: 0.9rem;
+    padding: 10px;
+    border-radius: 10px;
+    color: white;
+}
+
+button {
+    background-color: #E9967A;
+    font-family: 'Pixelify Sans', 'Lucida Console', monospace;
+    border: none;
+    margin-top: 20px;
+    padding: 20px 10px;
+    text-align: center;
+    border-radius: 10px;
+    font-size: 1.2rem;
+}
+
+button:hover {
+    background-color: red;
+    color: white;
+    transition-duration: 0.3s;
+}
+
+.container {
+    display: flex;
+}
+
+label {
+    font-family: 'Lucida Console', monospace;
+}
+
+input {
+    margin: 20px 10px;
 }
