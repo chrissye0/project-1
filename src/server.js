@@ -30,6 +30,9 @@ const handlePost = (request, response, parsedUrl) => {
   if (parsedUrl.pathname === '/addRating') {
     parseBody(request, response, apiHandler.addRating);
   }
+  if (parsedUrl.pathname === '/addPokemon') {
+    parseBody(request, response, apiHandler.addPokemon);
+  }
 };
 
 // handle GET requests
@@ -39,6 +42,8 @@ const handleGet = (request, response, parsedUrl) => {
     htmlHandler.getIndex(request, response);
   } else if (parsedUrl.pathname === '/style.css') {
     htmlHandler.getCSS(request, response);
+  } else if (parsedUrl.pathname === '/documentation.html') {
+    htmlHandler.getDocumentation(request, response);
   } else if (parsedUrl.pathname === '/getRandom') {
     apiHandler.getRandom(request, response);
   } else if (parsedUrl.pathname === '/getAll') {
@@ -47,6 +52,8 @@ const handleGet = (request, response, parsedUrl) => {
     apiHandler.getPokemon(request, response);
   } else if (parsedUrl.pathname === '/getPokemonFromType') {
     apiHandler.getPokemonFromType(request, response);
+  } else if (parsedUrl.pathname === '/getPokemonFromWeakness') {
+    apiHandler.getPokemonFromWeakness(request, response);
   } else {
     apiHandler.notReal(request, response);
   }

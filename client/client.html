@@ -13,9 +13,11 @@
       const allForm = document.querySelector('#allForm');
       const pokemonForm = document.querySelector('#pokemonForm');
       const typeForm = document.querySelector('#typeForm');
+      const weaknessForm = document.querySelector('#weaknessForm');
       // post
       const descriptionForm = document.querySelector('#descriptionForm');
       const ratingForm = document.querySelector('#ratingForm');
+      const addPokemonForm = document.querySelector('#addPokemonForm');
 
       const random = (e) => {
         e.preventDefault();
@@ -29,6 +31,7 @@
         return false;
       }
 
+      // handle display for /getPokemon text box
       const searchRadios = pokemonForm.elements['search'];
       document.getElementById('idField').style.display = "block";
       document.getElementById('nameField').style.display = "none";
@@ -56,6 +59,12 @@
         return false;
       }
 
+      const weaknesses = (e) => {
+        e.preventDefault();
+        sendGet(weaknessForm, 4);
+        return false;
+      }
+
       const addDescription = (e) => {
         e.preventDefault();
         sendPost(descriptionForm);
@@ -68,42 +77,51 @@
         return false;
       }
 
+      const addPokemon = (e) => {
+        e.preventDefault();
+        sendPost(addPokemonForm);
+        return false;
+      }
+
       //add event listeners
       randomForm.addEventListener('submit', random);
       allForm.addEventListener('submit', all);
       pokemonForm.addEventListener('submit', getPokemon)
-
       typeForm.addEventListener('submit', types);
+      weaknessForm.addEventListener('submit', weaknesses);
       descriptionForm.addEventListener('submit', addDescription);
       ratingForm.addEventListener('submit', addRating);
+      addPokemonForm.addEventListener('submit', addPokemon);
     }
 
     const handleResponse = async (response, parseResponse, endpointNum) => {
       const content = document.getElementsByClassName('result')[endpointNum];
+      // change text display depending on status code
       switch (response.status) {
         case 200:
-          content.innerHTML = `<b>Success</b>`;
+          content.innerHTML = `<b>${response.status} - Success</b>`;
           if (parseResponse) {
             let obj = await response.json();
             if (response.status === 200) {
+              // display JSON content
               content.innerHTML += `<p>${JSON.stringify(obj)}</p>`;
             }
           }
           break;
         case 201:
-          content.innerHTML = `<b>Created</b>`;
+          content.innerHTML = `<b>${response.status} - Created</b>`;
           break;
         case 204:
-          content.innerHTML = `<b>Updated (No Content)</b>`;
+          content.innerHTML = `<b>${response.status} - Updated (No Content)</b>`;
           break;
         case 400:
-          content.innerHTML = `<b>Bad Request</b>`;
+          content.innerHTML = `<b>${response.status} - Bad Request</b>`;
           break;
         case 404:
-          content.innerHTML = `<b>Resource Not Found</b>`;
+          content.innerHTML = `<b>${response.status} - Resource Not Found</b>`;
           break;
         default:
-          content.innerHTML = `Error code not implemented by client.`;
+          content.innerHTML = `${response.status} - Error code not implemented by client.`;
           break;
       }
     };
@@ -112,13 +130,11 @@
       let url = form.getAttribute('action');
       const radios = form.elements['method'];
       let method = '';
-      console.log(method)
       for (let i = 0; i < radios.length; i++) {
         if (radios[i].checked) {
           method = radios[i].value;
         }
       }
-      console.log(document.getElementById('idField').style.display);
       // if getPokemon form
       if (form.getAttribute('id') == 'pokemonForm') {
         // if id field is visible
@@ -126,15 +142,17 @@
         if (document.getElementById('idField').style.display == 'block') {
           url += `?id=${document.getElementById('idField').value}`;
         } else {
-          // if name field is visible and does not have integer
-          if (!parseInt(document.getElementById('nameField').value, 10)) {
-            url += `?name=${document.getElementById('nameField').value.toLowerCase()}`;
-          }
+          // if name field is visible
+          url += `?name=${document.getElementById('nameField').value.toLowerCase()}`;
         }
       }
       // if getPokemonFromType form
       if (form.getAttribute('id') == 'typeForm') {
         url += `?type=${document.getElementById('typeSelect').value}`;
+      }
+      // if getPokemonFromWeakness form
+      if (form.getAttribute('id') == 'weaknessForm') {
+        url += `?weakness=${document.getElementById('weaknessSelect').value}`;
       }
       let response = await fetch(url, {
         method: method,
@@ -149,46 +167,15 @@
       //Grab all the info from the form
       const url = form.getAttribute('action');
       const method = form.getAttribute('method');
+      // if description form
       if (form.getAttribute('id') == 'descriptionForm') {
         const idField = form.querySelector('#idDescriptionField');
         const descriptionField = form.querySelector('#descriptionField');
-
-        //Build a data string in the FORM-URLENCODED format.
         let formData = '';
         if (parseInt(idField.value, 10) <= 151) {
+          //Build a data string in the FORM-URLENCODED format with id and description
           formData = `id=${idField.value}&description=${descriptionField.value}`;
         }
-
-        //const formData = `id=${idField.value}&description=${descriptionField.value}`;
-        console.log(formData)
-
-        //Make a fetch request and await a response. Set the method to
-        //the one provided by the form (POST). Set the headers. Content-Type
-        //is the type of data we are sending. Accept is the data we would like
-        //in response. Then add our FORM-URLENCODED string as the body of the request.
-        let response = await fetch(url, {
-          method: method,
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Accept': 'application/json',
-          },
-          body: formData,
-        });
-        //Once we have a response, handle it.
-        handleResponse(response, response.status !== 204, 4);
-      }
-      if (form.getAttribute('id') == 'ratingForm') {
-        const idField = form.querySelector('#idRatingField');
-        const ratingField = form.querySelector('#ratingField');
-
-        //Build a data string in the FORM-URLENCODED format.
-        const formData = `id=${idField.value}&rating=${ratingField.value}`;
-        console.log(formData)
-
-        //Make a fetch request and await a response. Set the method to
-        //the one provided by the form (POST). Set the headers. Content-Type
-        //is the type of data we are sending. Accept is the data we would like
-        //in response. Then add our FORM-URLENCODED string as the body of the request.
         let response = await fetch(url, {
           method: method,
           headers: {
@@ -200,16 +187,45 @@
         //Once we have a response, handle it.
         handleResponse(response, response.status !== 204, 5);
       }
-
+      // if rating form
+      if (form.getAttribute('id') == 'ratingForm') {
+        const idField = form.querySelector('#idRatingField');
+        const ratingField = form.querySelector('#ratingField');
+        const formData = `id=${idField.value}&rating=${ratingField.value}`;
+        let response = await fetch(url, {
+          method: method,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json',
+          },
+          body: formData,
+        });
+        handleResponse(response, response.status !== 204, 6);
+      }
+      // if add pokemon form
+      if (form.getAttribute('id') == 'addPokemonForm') {
+        const newNameField = form.querySelector('#newNameField');
+        const newTypeSelect = form.querySelector('#newTypeSelect');
+        const formData = `name=${newNameField.value}&type=${newTypeSelect.value}`;
+        let response = await fetch(url, {
+          method: method,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json',
+          },
+          body: formData,
+        });
+        handleResponse(response, response.status !== 204, 7);
+      }
     };
-
+    // once the window loads
     window.onload = init;
   </script>
 </head>
 
 <body>
-  <!-- <a href="/docs">API Documentation</a> -->
-  <h1>Test Pokemon API</h1>
+  <h1>Pokemon API Tester</h1>
+  <a href="/documentation.html">Documentation</a>
   <div class="endpoint">
     <h2>
       /getRandom <span class="methods">GET / HEAD</span>
@@ -295,6 +311,39 @@
 
   <div class="endpoint">
     <h2>
+      /getPokemonFromWeakness <span class="methods">GET / HEAD</span>
+    </h2>
+    <div class="content">
+      <h3>Test This Endpoint</h3>
+      <form id="weaknessForm" action="/getPokemonFromWeakness" method="get">
+        <select name="types" id="weaknessSelect">
+          <option value="normal">Normal</option>
+          <option value="fire">Fire</option>
+          <option value="water">Water</option>
+          <option value="grass">Grass</option>
+          <option value="electric">Electric</option>
+          <option value="ice">Ice</option>
+          <option value="fighting">Fighting</option>
+          <option value="poison">Poison</option>
+          <option value="ground">Ground</option>
+          <option value="flying">Flying</option>
+          <option value="psychic">Psychic</option>
+          <option value="bug">Bug</option>
+          <option value="rock">Rock</option>
+          <option value="ghost">Ghost</option>
+          <option value="dragon">Dragon</option>
+        </select>
+        <br>
+        <label><input type="radio" name="method" value="GET" checked> GET</label>
+        <label><input type="radio" name="method" value="HEAD"> HEAD</label><br>
+        <button type="submit">Send Request</button>
+      </form>
+      <pre class="result"></pre>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <h2>
       /addDescription <span class="methods">POST</span>
     </h2>
     <div class="content">
@@ -323,6 +372,36 @@
     </div>
   </div>
 
+  <div class="endpoint">
+    <h2>
+      /addPokemon <span class="methods">POST</span>
+    </h2>
+    <div class="content">
+      <h3>Test This Endpoint</h3>
+      <form id="addPokemonForm" action="/addPokemon" method="post">
+        <label>Name: <input type="text" id="newNameField"></label><br>
+        <select name="types" id="newTypeSelect">
+          <option value="normal">Normal</option>
+          <option value="fire">Fire</option>
+          <option value="water">Water</option>
+          <option value="grass">Grass</option>
+          <option value="electric">Electric</option>
+          <option value="ice">Ice</option>
+          <option value="fighting">Fighting</option>
+          <option value="poison">Poison</option>
+          <option value="ground">Ground</option>
+          <option value="flying">Flying</option>
+          <option value="psychic">Psychic</option>
+          <option value="bug">Bug</option>
+          <option value="rock">Rock</option>
+          <option value="ghost">Ghost</option>
+          <option value="dragon">Dragon</option>
+        </select>
+        <button type="submit">Send Request</button>
+      </form>
+      <pre class="result"></pre>
+    </div>
+  </div>
 </body>
 
 </html>
