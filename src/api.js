@@ -121,7 +121,7 @@ const addDescription = (request, response) => {
     return respond(request, response, 400, responseJSON);
   }
   // if pokemon with this id
-  if (id > 1 || id < 151) {
+  if (id > 0 && id < pokemonData.length) {
     pokemonData[id - 1].description = description;
   } else {
     return respond(request, response, 400, { message: 'The page you are looking for was not found.', id: 'notFound' });
@@ -141,7 +141,7 @@ const addRating = (request, response) => {
     return respond(request, response, 400, responseJSON);
   }
   // if pokemon with this id
-  if (id > 1 || id < 151) {
+  if (id > 0 && id < pokemonData.length) {
     pokemonData[id - 1].rating = rating;
   } else {
     return respond(request, response, 400, { message: 'The page you are looking for was not found.', id: 'notFound' });

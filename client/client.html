@@ -172,10 +172,8 @@
         const idField = form.querySelector('#idDescriptionField');
         const descriptionField = form.querySelector('#descriptionField');
         let formData = '';
-        if (parseInt(idField.value, 10) <= 151) {
           //Build a data string in the FORM-URLENCODED format with id and description
           formData = `id=${idField.value}&description=${descriptionField.value}`;
-        }
         let response = await fetch(url, {
           method: method,
           headers: {
